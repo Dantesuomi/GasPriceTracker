@@ -7,11 +7,21 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Virsi {
     private final String virsiUrl = "https://www.virsi.lv/lv/privatpersonam/degviela/degvielas-un-elektrouzlades-cenas";
 
-    public FuelPrices getFuelPrices() throws IOException, InterruptedException {
+    private final String gasStationName = "Virsi";
+    private Connection conn;
+
+    public Virsi (Connection conn){
+        this.conn = conn;
+    }
+
+    public FuelPrices getFuelPrices() throws IOException, InterruptedException, SQLException {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(virsiUrl))
@@ -41,6 +51,27 @@ public class Virsi {
         Double fuelLpgPrice = Double.parseDouble(fuelLpgElements.html());
 
         FuelPrices fuelPrices = new FuelPrices(fuel95Price, fuel98Price, fuelDieselPrice, fuelLpgPrice);
+        saveFuelPricesToDB(fuelPrices);
         return fuelPrices;
+
+    }
+
+    private void saveFuelPricesToDB (FuelPrices fuelPrices) throws SQLException {
+        String sql = "INSERT INTO fuel_prices (fuel_95_price, fuel_98_price, fuel_diesel_price, fuel_lpg_price, gas_station, date_time) VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement statement = conn.prepareStatement(sql);
+        statement.setDouble(1, fuelPrices.getFuel95Price());
+        statement.setDouble(2, fuelPrices.getFuel98Price());
+        statement.setDouble(3, fuelPrices.getFuelDieselPrice());
+        statement.setDouble(4, fuelPrices.getFuelLpgPrice());
+        statement.setString(5, gasStationName);
+        statement.setString(6, fuelPrices.getTimestamp().toString());
+
+        int rowInserted = statement.executeUpdate();
+
+        if(rowInserted > 0){
+            System.out.println(gasStationName + " prices were inserted");
+        }else {
+            System.out.println("Something went wrong");
+        }
     }
 }

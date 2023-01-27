@@ -8,11 +8,22 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Neste {
     private final String nesteUrl = "https://www.neste.lv/lv/content/degvielas-cenas";
 
-    public FuelPrices getFuelPrices() throws IOException, InterruptedException {
+    private final String gasStationName = "Neste";
+
+    private Connection conn;
+
+    public Neste (Connection conn){
+        this.conn = conn;
+    }
+
+    public FuelPrices getFuelPrices() throws IOException, InterruptedException, SQLException {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(nesteUrl))
@@ -37,10 +48,26 @@ public class Neste {
         Elements fuelDieselElements = doc.select(fuelDieselCssSelector);
         Double fuelDieselPrice = Double.parseDouble(fuelDieselElements.html());
 
-
-
         FuelPrices fuelPrices = new FuelPrices(fuel95Price, fuel98Price, fuelDieselPrice);
+        saveFuelPricesToDB(fuelPrices);
         return fuelPrices;
+    }
+    private void saveFuelPricesToDB (FuelPrices fuelPrices) throws SQLException {
+        String sql = "INSERT INTO fuel_prices (fuel_95_price, fuel_98_price, fuel_diesel_price, gas_station, date_time) VALUES (?, ?, ?, ?, ?)";
+        PreparedStatement statement = conn.prepareStatement(sql);
+        statement.setDouble(1, fuelPrices.getFuel95Price());
+        statement.setDouble(2, fuelPrices.getFuel98Price());
+        statement.setDouble(3, fuelPrices.getFuelDieselPrice());
+        statement.setString(4, gasStationName);
+        statement.setString(5, fuelPrices.getTimestamp().toString());
+
+        int rowInserted = statement.executeUpdate();
+
+        if(rowInserted > 0){
+            System.out.println(gasStationName + " prices were inserted");
+        }else {
+            System.out.println("Something went wrong");
+        }
     }
 }
 
