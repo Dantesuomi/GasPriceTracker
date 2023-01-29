@@ -8,7 +8,7 @@ public class FuelPrices {
     private LocalDateTime timestamp;
 
     FuelPrices(){
-        this.timestamp = LocalDateTime.now();
+
     }
 
     FuelPrices(double fuel95Price, double fuel98Price, double fuelDieselPrice){
@@ -40,6 +40,10 @@ public class FuelPrices {
 
     public void setFuelLpgPrice(double fuelLpgPrice){
         this.fuelLpgPrice = fuelLpgPrice;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp){
+        this.timestamp = timestamp;
     }
 
     public double getFuel95Price(){

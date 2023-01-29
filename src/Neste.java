@@ -8,9 +8,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class Neste {
     private final String nesteUrl = "https://www.neste.lv/lv/content/degvielas-cenas";
@@ -23,7 +21,23 @@ public class Neste {
         this.conn = conn;
     }
 
-    public FuelPrices getFuelPrices() throws IOException, InterruptedException, SQLException {
+    public FuelPrices getCurrentFuelPrices() throws SQLException {
+        String sql = "SELECT fuel_95_price, fuel_98_price, fuel_diesel_price, date_time FROM fuel_prices WHERE gas_station = 'Neste' ORDER BY date_time DESC LIMIT 1";
+        Statement statement = conn.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        resultSet.next();
+        FuelPrices fuelPrices = new FuelPrices();
+        fuelPrices.setFuel95Price(resultSet.getDouble("fuel_95_price"));
+        fuelPrices.setFuel98Price(resultSet.getDouble("fuel_98_price"));
+        fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
+
+
+        fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
+
+        return fuelPrices;
+    }
+
+    public FuelPrices retrieveFuelPrices() throws IOException, InterruptedException, SQLException {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(nesteUrl))
