@@ -34,7 +34,6 @@ public class GotikaAuto {
 
         fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
 
-
         fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
 
         return fuelPrices;

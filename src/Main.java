@@ -2,7 +2,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -10,13 +9,11 @@ import java.util.InputMismatchException;
 import java.util.Locale;
 import java.util.Scanner;
 
-//https://github.com/kzars/SGT_34_01/blob/master/src/db/Users.java
-
 public class Main {
 
     private static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) throws SQLException, IOException, InterruptedException, ParseException {
+    public static void main(String[] args) throws SQLException, IOException, InterruptedException {
 
         String dbURL = "jdbc:mysql://localhost:3306/gas_tracker";
         String username = "root";
@@ -62,7 +59,6 @@ public class Main {
                         System.out.println("Input not valid (1-3)");
                         break;
                 }
-
             }catch (InputMismatchException e) {
                 System.err.println("Wrong input! Enter correct number, please");
                 scanner.nextLine();
@@ -263,13 +259,11 @@ public class Main {
         Neste neste = new Neste(conn);
         ArrayList<FuelPrices> nesteDateRangePrices = neste.getDateRangePrices(initialDate, lastDate);
         printDateRanges(nesteDateRangePrices, "Neste");
-
     }
 
     private static void dateRangeGotikaAuto(Connection conn, LocalDate initialDate, LocalDate lastDate) throws SQLException {
         GotikaAuto gotikaAuto = new GotikaAuto(conn);
         ArrayList<FuelPrices> gotikaAutoDateRangePrices = gotikaAuto.getDateRangePrices(initialDate, lastDate);
         printDateRanges(gotikaAutoDateRangePrices, "GotikaAuto");
-
     }
 }

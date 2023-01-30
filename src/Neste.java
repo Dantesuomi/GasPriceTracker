@@ -2,7 +2,6 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -32,7 +31,6 @@ public class Neste {
         fuelPrices.setFuel95Price(resultSet.getDouble("fuel_95_price"));
         fuelPrices.setFuel98Price(resultSet.getDouble("fuel_98_price"));
         fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
-
 
         fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
 
@@ -109,6 +107,7 @@ public class Neste {
         saveFuelPricesToDB(fuelPrices);
         return fuelPrices;
     }
+
     private void saveFuelPricesToDB (FuelPrices fuelPrices) throws SQLException {
         String sql = "INSERT INTO fuel_prices (fuel_95_price, fuel_98_price, fuel_diesel_price, gas_station, date_time) VALUES (?, ?, ?, ?, ?)";
         PreparedStatement statement = conn.prepareStatement(sql);
