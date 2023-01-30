@@ -9,7 +9,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 public class GotikaAuto {
     private final String gotikaAutoUrl = "https://www.gotikaauto.lv/index.php";
@@ -36,6 +38,45 @@ public class GotikaAuto {
         fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
 
         return fuelPrices;
+    }
+
+    public FuelPrices getSpecificDateFuelPrices(LocalDate date) throws SQLException {
+        String sql = "SELECT fuel_95_price, fuel_diesel_price, gas_station, date_time FROM fuel_prices WHERE gas_station = '" + gasStationName + "' AND DATE(date_time) = '" + date.toString() + "' ORDER  BY date_time DESC LIMIT 1;";
+        Statement statement = conn.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        resultSet.next();
+        try {
+            FuelPrices fuelPrices = new FuelPrices();
+            fuelPrices.setFuel95Price(resultSet.getDouble("fuel_95_price"));
+            fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
+            fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
+
+            return fuelPrices;
+        } catch (Exception e){
+            return null;
+        }
+    }
+
+    public ArrayList<FuelPrices> getDateRangePrices(LocalDate initialDate, LocalDate lastDate) throws SQLException {
+        String sql = "SELECT fuel_95_price, fuel_diesel_price, gas_station, date_time FROM fuel_prices WHERE gas_station = '" + gasStationName + "'AND DATE(date_time) >='" + initialDate + "'AND DATE(date_time) <= '" + lastDate + "' ORDER  BY date_time DESC;";
+        Statement statement = conn.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        ArrayList<FuelPrices> fuelPricesList = new ArrayList<FuelPrices>();
+        resultSet.next();
+        try {
+            while (resultSet.next()){
+                FuelPrices fuelPrices = new FuelPrices();
+                fuelPrices.setFuel95Price(resultSet.getDouble("fuel_95_price"));
+
+                fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
+
+                fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
+                fuelPricesList.add(fuelPrices);
+            }
+            return fuelPricesList;
+        } catch (Exception e){
+            return null;
+        }
     }
 
     public FuelPrices retrieveFuelPrices() throws IOException, InterruptedException, SQLException {

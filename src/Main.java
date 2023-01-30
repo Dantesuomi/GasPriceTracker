@@ -2,12 +2,12 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.Locale;
 import java.util.Scanner;
 
 //https://github.com/kzars/SGT_34_01/blob/master/src/db/Users.java
@@ -16,7 +16,7 @@ public class Main {
 
     private static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) throws IOException, InterruptedException, SQLException {
+    public static void main(String[] args) throws SQLException, IOException, InterruptedException, ParseException {
 
         String dbURL = "jdbc:mysql://localhost:3306/gas_tracker";
         String username = "root";
@@ -25,11 +25,8 @@ public class Main {
 
         Connection conn = DriverManager.getConnection(dbURL, username, password);
         //collectDataFromWebsites(conn);
-        CircleK circleKGasStation = new CircleK(conn);
-        FuelPrices debugCircleK = circleKGasStation.getCurrentFuelPrices();
         boolean quit = false;
-        int choice = 0;
-        //printInstructions();
+        int choice;
         while (!quit) {
 
             System.out.println("Welcome! Choose your option ");
@@ -43,28 +40,18 @@ public class Main {
                     case 1:
                         CurrentPrices(conn);
                         break;
-                        //completed
                     case 2:
-                        //TODO CREATE METHODS  FOR HISTORIC DATES
                         System.out.println("Enter your choice");
                         instructionHistoricalPrices();
-                        int choiceHistoricalPrices = 0;
+                        int choiceHistoricalPrices;
                         choiceHistoricalPrices = scanner.nextInt();
                         switch (choiceHistoricalPrices) {
                             case 1:
-                                //choose specific date
-                                specificDate();
+                                specificDate(conn);
                                 break;
                             case 2:
                                 //choose date range
-                                dateRange();
-                                int choiceDateRange = 0;
-                                choiceDateRange = scanner.nextInt();
-                                switch (choiceDateRange) {
-                                    case 1:
-                                        chooseGasStation();
-                                        break;
-                                }
+                                dateRange(conn);
                         }
                     case 3:
                         quit = true;
@@ -79,7 +66,6 @@ public class Main {
                 scanner.nextLine();
             }
         }
-
     }
 
     private static void collectDataFromWebsites(Connection conn) throws SQLException, IOException, InterruptedException{
@@ -87,19 +73,15 @@ public class Main {
 
         CircleK circleKGasStation = new CircleK(conn);
         circleKGasStation.retrieveFuelPrices();
-        System.out.println("Retrieved data from \"CircleK\"");
 
         Virsi virsiGasStation = new Virsi(conn);
         virsiGasStation.retrieveFuelPrices();
-        System.out.println("Retrieved data from \"Virši\"");
 
         Neste nesteGasStation = new Neste(conn);
         nesteGasStation.retrieveFuelPrices();
-        System.out.println("Retrieved data from \"Neste\"");
 
         GotikaAuto gotikaAutoGasStation = new GotikaAuto(conn);
         gotikaAutoGasStation.retrieveFuelPrices();
-        System.out.println("Retrieved data from \"GotikaAuto\"");
     }
 
     private static void printInstructions(){
@@ -112,27 +94,35 @@ public class Main {
         CircleK circleKGasStation = new CircleK(conn);
         FuelPrices circleKFuelPrices = circleKGasStation.getCurrentFuelPrices();
 
-        System.out.println("Current CircleK fuel prices for \n95: " + circleKFuelPrices.getFuel95Price() + "\n98: "
-                + circleKFuelPrices.getFuel98Price() + "\nDiesel: " + circleKFuelPrices.getFuelDieselPrice() + "\nLPG: " + circleKFuelPrices.getFuelLpgPrice() + "\nat " + circleKFuelPrices.getTimestamp() + "\n");
-
         Neste nesteGasStation = new Neste(conn);
         FuelPrices nesteFuelPrices = nesteGasStation.getCurrentFuelPrices();
 
-        System.out.println("Current Neste fuel prices for \n95: " + nesteFuelPrices.getFuel95Price() + "\n98: "
-                + nesteFuelPrices.getFuel98Price() + "\nDiesel: " + nesteFuelPrices.getFuelDieselPrice() + "\nLPG: " + "not available" + "\nat " + nesteFuelPrices.getTimestamp() + "\n");
 
         Virsi virsiGasStation = new Virsi(conn);
         FuelPrices virsiFuelPrices = virsiGasStation.getCurrentFuelPrices();
 
-        System.out.println("Current Virši fuel prices for \n95: " + virsiFuelPrices.getFuel95Price() + "\n98: "
-                + virsiFuelPrices.getFuel98Price() + "\nDiesel: " + virsiFuelPrices.getFuelDieselPrice() + "\nLPG: " + virsiFuelPrices.getFuelLpgPrice() + "\nat " + virsiFuelPrices.getTimestamp() + "\n");
 
         GotikaAuto gotikaAutoGasStation = new GotikaAuto(conn);
         FuelPrices gotikaAutoFuelPrices = gotikaAutoGasStation.getCurrentFuelPrices();
 
+
+        printPrices(circleKFuelPrices, nesteFuelPrices, virsiFuelPrices, gotikaAutoFuelPrices);
+
+    }
+
+    private static void printPrices(FuelPrices circleKFuelPrices, FuelPrices nesteFuelPrices, FuelPrices virsiFuelPrices, FuelPrices gotikaAutoFuelPrices){
+
+        System.out.println("Current CircleK fuel prices for \n95: " + circleKFuelPrices.getFuel95Price() + "\n98: "
+                + circleKFuelPrices.getFuel98Price() + "\nDiesel: " + circleKFuelPrices.getFuelDieselPrice() + "\nLPG: " + circleKFuelPrices.getFuelLpgPrice() + "\nat " + circleKFuelPrices.getTimestamp() + "\n");
+
+        System.out.println("Current Neste fuel prices for \n95: " + nesteFuelPrices.getFuel95Price() + "\n98: "
+                + nesteFuelPrices.getFuel98Price() + "\nDiesel: " + nesteFuelPrices.getFuelDieselPrice() + "\nLPG: " + "not available" + "\nat " + nesteFuelPrices.getTimestamp() + "\n");
+
+        System.out.println("Current Virši fuel prices for \n95: " + virsiFuelPrices.getFuel95Price() + "\n98: "
+                + virsiFuelPrices.getFuel98Price() + "\nDiesel: " + virsiFuelPrices.getFuelDieselPrice() + "\nLPG: " + virsiFuelPrices.getFuelLpgPrice() + "\nat " + virsiFuelPrices.getTimestamp() + "\n");
+
         System.out.println("Current GotikaAuto fuel prices for \n95: " + gotikaAutoFuelPrices.getFuel95Price() + "\n98: "
                 + "not available" + "\nDiesel: " + gotikaAutoFuelPrices.getFuelDieselPrice() + "\nLPG: " + "not available" + "\nat " + gotikaAutoFuelPrices.getTimestamp() + "\n");
-
     }
 
     private static void instructionHistoricalPrices(){
@@ -142,52 +132,66 @@ public class Main {
         System.out.println("\t 3 - To quit the application");
     }
 
-    private static void specificDate(){
-        System.out.println("Enter date in mm.dd.yyyy format");
-        //import SQL library Date?
-        //date validation
-        Date date = null;
-        String specificDate = scanner.nextLine();
+    private static void specificDate(Connection conn) throws SQLException{
+        //FROM 27.01.2023
+        System.out.println("Enter date in dd-MM-yyyy format");
+        scanner.nextLine();
+        LocalDate parsedDate = null;
+        String date = scanner.nextLine();
         try {
-            DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-            formatter.setLenient(false);
-            date = formatter.parse(specificDate);
-        } catch (ParseException e) {
-            e.printStackTrace();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ROOT);
+            parsedDate = LocalDate.parse(date, formatter);
+        } catch (Exception e) {
+            System.out.println("Invalid date!");
+            return;
         }
-        //how to get data for specific date?????????
+        CircleK circleK = new CircleK(conn);
+        FuelPrices circleKFuelPrices = circleK.getSpecificDateFuelPrices(parsedDate);
+
+        Neste neste = new Neste(conn);
+        FuelPrices nesteFuelPrices = neste.getSpecificDateFuelPrices(parsedDate);
+
+        Virsi virsi = new Virsi(conn);
+        FuelPrices virsiFuelPrices = virsi.getSpecificDateFuelPrices(parsedDate);
+
+        GotikaAuto gotikaAuto = new GotikaAuto(conn);
+        FuelPrices gotikaAutoFuelPrices = gotikaAuto.getSpecificDateFuelPrices(parsedDate);
+        if (circleKFuelPrices == null || nesteFuelPrices == null || virsiFuelPrices == null || gotikaAutoFuelPrices == null){
+            System.out.println("Fuel prices are not available for this date");
+        } else {
+            printPrices(circleKFuelPrices, nesteFuelPrices, virsiFuelPrices, gotikaAutoFuelPrices);
+        }
     }
 
-    private static void dateRange(){
-        System.out.println("Enter first date in dd.MM.yyyy format");
-        Date date = null;
-        String dateRange1 = scanner.nextLine();
+    private static void dateRange(Connection conn) throws SQLException {
+        System.out.println("Enter first date in dd-MM-yyyy format");
+        scanner.nextLine();
+        LocalDate initialParsedDate = null;
+        String initialDate = scanner.nextLine();
         try {
-            DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-            formatter.setLenient(false);
-            date = formatter.parse(dateRange1);
-        } catch (ParseException e) {
-            e.printStackTrace();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ROOT);
+            initialParsedDate = LocalDate.parse(initialDate, formatter);
+        } catch (Exception e) {
+            System.out.println("Invalid date!");
+            return;
         }
-        System.out.println("Enter second date in dd.MM.yyyy format");
-        String dateRange2 = scanner.nextLine();
+        System.out.println("Enter second date in dd-MM-yyyy format");
+        LocalDate lastParsedDate = null;
+        String lastDate = scanner.nextLine();
         try {
-            DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-            formatter.setLenient(false);
-            date = formatter.parse(dateRange1);
-        } catch (ParseException e) {
-            e.printStackTrace();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ROOT);
+            lastParsedDate = LocalDate.parse(lastDate, formatter);
+        } catch (Exception e) {
+            System.out.println("Invalid date!");
+            return;
         }
-
+        chooseGasStation(conn, initialParsedDate, lastParsedDate);
     }
 
-    private static void chooseGasStation(){
-
+    private static void chooseGasStation(Connection conn, LocalDate initialDate, LocalDate lastDate) throws SQLException {
         boolean quit = false;
-        int gasStationChoice = 0;
-
-        while (!quit){
-
+        int gasStationChoice;
+        while (!quit) {
             System.out.println("Choose gas station");
             System.out.println("\nPress");
             System.out.println("\t 1 - To choose " + "CircleK");
@@ -199,44 +203,71 @@ public class Main {
                 gasStationChoice = scanner.nextInt();
                 scanner.nextLine();
 
-                switch (gasStationChoice){
+                switch (gasStationChoice) {
                     case 1:
-                        dateRangeCircleK();
+                        dateRangeCircleK(conn, initialDate, lastDate);
                         break;
                     case 2:
-                        dateRangeVirsi();
+                        dateRangeVirsi(conn, initialDate, lastDate);
                         break;
                     case 3:
-                        dateRangeNeste();
+                        dateRangeNeste(conn, initialDate, lastDate);
                         break;
                     case 4:
-                        dateRangeGotikaAuto();
+                        dateRangeGotikaAuto(conn, initialDate, lastDate);
                         break;
                     default:
-                        System.out.println("Input not valid (1-3)");
+                        System.out.println("Input not valid (1-4)");
                         break;
                 }
-            }catch (InputMismatchException e){
+                System.out.println("Do you want to get another prices? (y/n)");
+                String answer = scanner.nextLine();
+                if(answer.equals("y".toLowerCase())){
+                    quit = true;
+                }
+                else {
+                    System.exit(0);
+                }
+
+            } catch (InputMismatchException e) {
                 System.err.println("Wrong input! Integers only!");
                 scanner.nextLine();
             }
         }
     }
 
-    //how to get data for specific date range and gas station?????????
-    private static void dateRangeCircleK(){
+
+    private static void dateRangeCircleK(Connection conn, LocalDate initialDate, LocalDate lastDate) throws SQLException {
+        CircleK circleK = new CircleK(conn);
+        ArrayList<FuelPrices> circleKDateRangePrices = circleK.getDateRangePrices(initialDate, lastDate);
+        printDateRanges(circleKDateRangePrices, "CircleK");
+    }
+
+    private static void printDateRanges(ArrayList<FuelPrices> dateRangePrices, String gasStationName){
+        System.out.println("Prices for specified date range for " + gasStationName + " :");
+        for (FuelPrices fuelPrices : dateRangePrices){
+            System.out.println("95: " + fuelPrices.getFuel95Price() + " 98: "
+                    + fuelPrices.getFuel98Price() + " Diesel: " + fuelPrices.getFuelDieselPrice() + " LPG: " + fuelPrices.getFuelLpgPrice() + " at " + fuelPrices.getTimestamp());
+        }
+    }
+
+    private static void dateRangeVirsi(Connection conn, LocalDate initialDate, LocalDate lastDate) throws SQLException {
+        Virsi virsi = new Virsi(conn);
+        ArrayList<FuelPrices> virsiDateRangePrices = virsi.getDateRangePrices(initialDate, lastDate);
+        printDateRanges(virsiDateRangePrices, "Virši");
+    }
+
+    private static void dateRangeNeste(Connection conn, LocalDate initialDate, LocalDate lastDate) throws SQLException {
+        Neste neste = new Neste(conn);
+        ArrayList<FuelPrices> nesteDateRangePrices = neste.getDateRangePrices(initialDate, lastDate);
+        printDateRanges(nesteDateRangePrices, "Neste");
 
     }
 
-    private static void dateRangeVirsi(){
-
-    }
-
-    private static void dateRangeNeste(){
-
-    }
-
-    private static void dateRangeGotikaAuto(){
+    private static void dateRangeGotikaAuto(Connection conn, LocalDate initialDate, LocalDate lastDate) throws SQLException {
+        GotikaAuto gotikaAuto = new GotikaAuto(conn);
+        ArrayList<FuelPrices> gotikaAutoDateRangePrices = gotikaAuto.getDateRangePrices(initialDate, lastDate);
+        printDateRanges(gotikaAutoDateRangePrices, "GotikaAuto");
 
     }
 
