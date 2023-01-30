@@ -69,7 +69,6 @@ public class CircleK {
         Statement statement = conn.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         ArrayList<FuelPrices> fuelPricesList = new ArrayList<FuelPrices>();
-        resultSet.next();
         try {
             while (resultSet.next()){
             FuelPrices fuelPrices = new FuelPrices();
