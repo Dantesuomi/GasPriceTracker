@@ -24,7 +24,7 @@ public class Main {
 
 
         Connection conn = DriverManager.getConnection(dbURL, username, password);
-        //collectDataFromWebsites(conn);
+        collectDataFromWebsites(conn);
         boolean quit = false;
         int choice;
         while (!quit) {
@@ -52,7 +52,9 @@ public class Main {
                             case 2:
                                 //choose date range
                                 dateRange(conn);
+                                break;
                         }
+                        break;
                     case 3:
                         quit = true;
                         break;
@@ -270,8 +272,4 @@ public class Main {
         printDateRanges(gotikaAutoDateRangePrices, "GotikaAuto");
 
     }
-
-
-
-
 }
