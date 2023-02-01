@@ -1,21 +1,14 @@
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class CircleK {
     private final String circleKUrl = "https://www.circlek.lv/priv%C4%81tperson%C4%81m/degvielas-cenas";
@@ -71,13 +64,13 @@ public class CircleK {
         ArrayList<FuelPrices> fuelPricesList = new ArrayList<FuelPrices>();
         try {
             while (resultSet.next()){
-            FuelPrices fuelPrices = new FuelPrices();
-            fuelPrices.setFuel95Price(resultSet.getDouble("fuel_95_price"));
-            fuelPrices.setFuel98Price(resultSet.getDouble("fuel_98_price"));
-            fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
-            fuelPrices.setFuelLpgPrice(resultSet.getDouble("fuel_lpg_price"));
+                FuelPrices fuelPrices = new FuelPrices();
+                fuelPrices.setFuel95Price(resultSet.getDouble("fuel_95_price"));
+                fuelPrices.setFuel98Price(resultSet.getDouble("fuel_98_price"));
+                fuelPrices.setFuelDieselPrice(resultSet.getDouble("fuel_diesel_price"));
+                fuelPrices.setFuelLpgPrice(resultSet.getDouble("fuel_lpg_price"));
 
-            fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
+                fuelPrices.setTimestamp(resultSet.getTimestamp("date_time").toLocalDateTime());
                 fuelPricesList.add(fuelPrices);
             }
             return fuelPricesList;

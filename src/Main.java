@@ -171,7 +171,7 @@ public class Main {
             initialParsedDate = LocalDate.parse(initialDate, formatter);
         } catch (Exception e) {
             System.out.println("Invalid date!");
-            return;
+            return; //get to the main menu
         }
         System.out.println("Enter second date in dd-MM-yyyy format");
         LocalDate lastParsedDate = null;
@@ -228,7 +228,7 @@ public class Main {
                 }
 
             } catch (InputMismatchException e) {
-                System.err.println("Wrong input! Integers only!");
+                System.err.println("Wrong input! Enter correct number, please");
                 scanner.nextLine();
             }
         }
